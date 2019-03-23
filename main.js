@@ -30,16 +30,19 @@ define(function (require, exports, module) {
       var start = editor.getCursorPos(true, "start");
       var end = editor.getCursorPos(true, "end");
       var space = " ".repeat(start.ch);
-      console.log(space.length)
       simpleDomain.exec("formatSQL", editor.getSelectedText())
           .done(function (result) {
               var indentedResult = result.replace(/\n/g, "\n"+space);
-              editor.document.replaceRange(indentedResult, start, end);
+              var fixQuotationSpace = indentedResult.replace(/' (.*?) '/g, "'$1'");
+              var fixBracketsSpace  = fixQuotationSpace.replace(/{ (.*?) }/g, "{$1}");
+              var fixDollarSpace    = fixBracketsSpace.replace(/\$ /g, "$");
+              editor.document.replaceRange(fixDollarSpace, start, end);
           }).fail(function (err) {
               console.error(err);
           });
     }
     var MY_COMMAND_ID = "sqlformatter.format";   // package-style naming to avoid collisions
     CommandManager.register("Format SQL", MY_COMMAND_ID, SQL_format);    
-    KeyBindingManager.addBinding(MY_COMMAND_ID, "Ctrl-Shift-Q");
+    KeyBindingManager.addBinding(MY_COMMAND_ID, "Ctrl-Shift-Q", "win");
+    KeyBindingManager.addBinding(MY_COMMAND_ID, "Ctrl-Shift-Q", "mac");
 });
